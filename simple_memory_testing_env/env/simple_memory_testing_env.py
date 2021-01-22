@@ -198,35 +198,57 @@ class SimpleMemoryTestingEnv(MiniGridEnv):
     """
     def __init__(
         self,
+        easy=False,
+        nbr_colors=4,
         width=13,
         height=9,
         see_through_walls=False,
         seed=1337,
         agent_view_size=7,
+        max_nbr_steps=50,
     ):  
-        
-        self.goalEnum2id = {"red":0, "yellow":1, "blue":2, "green":3}
+        self.easy = easy
+        self.nbr_colors = nbr_colors
+
+        self.max_nbr_steps = max_nbr_steps
+
+        self.goalEnum2id = {"red":0, "blue":1, "yellow":2, "green":3}
         self.id2goalEnum = dict(zip(self.goalEnum2id.values(), self.goalEnum2id.keys()))
         self.nbr_goals = len(self.goalEnum2id)
         
-        self.goal_positions = [
-            np.array([4*width//5-1, 2*height//5-1]), 
-            np.array([4*width//5-1, 3*height//5+1])
-        ]
-
-        self.indicator_position = np.array([width//4+1, height//2])
-
-        # Current position and direction of the agent
-        self.agent_start_pos = (width//4, height//2)
         self.agent_start_dir = 0
+
+        if self.easy:
+            self.goal_positions = [
+                np.array([4*width//5, 2*height//5-1]), 
+                np.array([4*width//5, 3*height//5+1])
+            ]
+
+            self.indicator_position = np.array([width//2+2, height//2])
+            self.agent_start_pos = (width//2+1, height//2)
+        else:
+            self.goal_positions = [
+                np.array([4*width//5-1, 2*height//5-1]), 
+                np.array([4*width//5-1, 3*height//5+1])
+            ]
+
+            self.indicator_position = np.array([width//4+1, height//2])
+            # Current position and direction of the agent
+            self.agent_start_pos = (width//4, height//2)
+                        
         
         super().__init__(
             width=width,
             height=height,
-            max_steps=100,
+            max_steps=max_nbr_steps,
             see_through_walls=see_through_walls,
             seed=seed,
         )
+
+    def reset(self, **kwargs):
+        if 'seed' in kwargs.keys():
+            self.seed(seed=kwargs.pop('seed'))
+        return super(SimpleMemoryTestingEnv, self).reset(**kwargs)
 
     def _gen_grid(self, width, height):
         self.door_closed = False
@@ -238,7 +260,7 @@ class SimpleMemoryTestingEnv(MiniGridEnv):
         self.grid.wall_rect(0, 0, width, height)
 
         self.goals = np.random.choice(
-            a=[RedGoal,YellowGoal,GreenGoal,BlueGoal],
+            a=[RedGoal,BlueGoal,YellowGoal,GreenGoal][:self.nbr_colors],
             size=(2,),
             replace=False
         )
@@ -261,6 +283,7 @@ class SimpleMemoryTestingEnv(MiniGridEnv):
             self.place_agent()
 
         self.mission = "get to the indicated goal square."
+        self.step_counter = 0
 
     def get_obs_render(self, obs, tile_size=TILE_PIXELS//2):
         """
@@ -346,6 +369,8 @@ class SimpleMemoryTestingEnv(MiniGridEnv):
         return str
 
     def step(self, action):
+        self.step_counter += 1
+
         next_obs, reward, done, next_info = super(SimpleMemoryTestingEnv, self).step(action)
 
         reward, done = self._reward_done()
@@ -358,7 +383,7 @@ class SimpleMemoryTestingEnv(MiniGridEnv):
 
 
     def _reward_done(self):
-        reward = 0
+        reward = -0.1
         done = False 
 
         # Get the content of the cell where the agent is:
@@ -370,16 +395,27 @@ class SimpleMemoryTestingEnv(MiniGridEnv):
                 if np.all(self.agent_pos == goal_pos):
                     done = True
                     if goal_id == self.indicator_goal_idx:
-                        reward = 1
+                        reward = 5
                     else:
-                        reward = -1
+                        reward -= 1
                     break
+
+        if self.step_counter>= self.max_nbr_steps:
+            done = True 
+            # if reward==0:   
+            #     reward = -1
 
         return reward, done 
 
 
-def generate_env(**kwargs):
-    env = SimpleMemoryTestingEnv(**kwargs)
+def generate_env(easy=False, **kwargs):
+    env = SimpleMemoryTestingEnv(easy=easy, **kwargs)
     env = RGBImgPartialObsWrapper(env) # Get pixel observations
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
     return env 
+
+def generate_easy_env(**kwargs):
+    return generate_env(easy=True, **kwargs)
+
+def generate_easy_2colors_env(**kwargs):
+    return generate_env(easy=True, nbr_colors=2, **kwargs)
