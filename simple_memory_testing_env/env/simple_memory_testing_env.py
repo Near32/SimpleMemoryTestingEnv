@@ -259,7 +259,14 @@ class SimpleMemoryTestingEnv(MiniGridEnv):
         # Generate the surrounding walls
         self.grid.wall_rect(0, 0, width, height)
 
+        """
         self.goals = np.random.choice(
+            a=[RedGoal,BlueGoal,YellowGoal,GreenGoal][:self.nbr_colors],
+            size=(2,),
+            replace=False
+        )
+        """
+        self.goals = self.np_random.choice(
             a=[RedGoal,BlueGoal,YellowGoal,GreenGoal][:self.nbr_colors],
             size=(2,),
             replace=False
@@ -413,6 +420,9 @@ def generate_env(easy=False, **kwargs):
     env = RGBImgPartialObsWrapper(env) # Get pixel observations
     env = ImgObsWrapper(env) # Get rid of the 'mission' field
     return env 
+
+def generate_2colors_env(**kwargs):
+    return generate_env(easy=False, nbr_colors=2, **kwargs)
 
 def generate_easy_env(**kwargs):
     return generate_env(easy=True, **kwargs)
