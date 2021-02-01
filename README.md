@@ -14,11 +14,11 @@ This is a simple OpenAI Gym-compatible environment to test RL agent's memory.
 
 + default environment (partial observability + memory-requiring T-maze with 4 different colors) : `"SimpleMemoryTestingEnv-v0"` (with only 2 colors: `"SimpleMemoryTestingEnv-2Colors-v0"`)
 
-![default_env](https://www.github.com/Near32/SimpleMemoryTestingEnv/raw/master/resources/normal.gif)
+![default_env](https://www.github.com/Near32/SimpleMemoryTestingEnv/raw/main/resources/normal.gif)
 
 + easy environment (partial observability maze with 4 different colors) : `"SimpleMemoryTestingEnv-Easy-v0"` (with only 2 colors: `"SimpleMemoryTestingEnv-Easy-2Colors-v0"`)
 
-![easy_env](https://www.github.com/Near32/SimpleMemoryTestingEnv/raw/master/resources/easy.gif)
+![easy_env](https://www.github.com/Near32/SimpleMemoryTestingEnv/raw/main/resources/easy.gif)
 
 
 ## Installation
